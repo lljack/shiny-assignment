@@ -1,0 +1,71 @@
+---
+title: "Shiny app exercise"
+author: "Ryota"
+date: "10/12/2018"
+output: slidy_presentation
+runtime: shiny
+---
+
+## Overview of this shiny app 
+This shiny application predicts the MPG (Mile per gallon) of cars from wt 
+(weight of cars). The source of the dataset is from mtcars.
+
+## ui.R and server.R
+Regarding ui.R and server.R, see below link:
+
+https://github.com/lljack/shiny-assignment
+
+## How to use the app
+- Select the weight and push the submit button at the sidebar pannel. 
+- Then, the MPG will be shown in the main pannel.
+
+## Interactive Plot of this app
+
+```{r, echo=FALSE}
+library(shiny)
+
+shinyApp(
+ui = fluidPage(
+    titlePanel("Predict MPG from weight"),
+    sidebarLayout(
+      sidebarPanel(
+        sliderInput("sliderWT", "What is the WT of the car?", 1, 6, value =3.5), 
+        checkboxInput("showModel1", "Show/Hide Model 1", value = TRUE), 
+        submitButton("Sbutmit")
+      ),
+      mainPanel(
+        plotOutput("plot1"),
+        h3("Predicted MPG from Model 1:"),
+        textOutput("pred1")
+      )
+  )
+),
+
+server = function(input, output) {
+  model1 <- lm(mpg ~ wt, data = mtcars)
+                           
+  model1pred <- reactive({
+    wtInput <- input$sliderWT
+    predict(model1, newdata = data.frame(wt = wtInput))
+  })
+                           
+   output$plot1 <- renderPlot({
+    wtInput <- input$sliderWT
+    
+    plot(mtcars$wt, mtcars$mpg, xlab = "weight",
+         ylab = "Miles Per Gallon", bty = "n", pch = 16,
+         xlim = c(1, 6), ylim = c(10, 35))
+    if(input$showModel1){
+       abline(model1, col = "green", lwd = 2)
+    }
+   legend(4, 30, c("Model 1 Prediction"), pch = 16,
+           col = c("green"), bty = "n", cex = 1.2)
+    points(wtInput, model1pred(), col = "green", pch = 16, cex = 2)
+  })
+                                              
+  output$pred1 <- renderText({
+    model1pred()
+  })
+}
+)
+```
